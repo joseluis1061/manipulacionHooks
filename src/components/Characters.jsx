@@ -1,11 +1,16 @@
 import React from 'react'
 import { Character } from './Character';
-import { useState, useEffect, useReducer, useMemo } from 'react'
+import { Search } from './Search';
+import useCharacters from '../hooks/useCharacters'
+import { useState, useReducer, useMemo, useRef, useCallback } from 'react';
 
 //Estado inicial del reducer
 const initialState = {
   favorites:[],
 }
+
+//URL API
+const API = 'https://rickandmortyapi.com/api/character/';
 
 //Funcion reducer
 const favoritesReducer = (state, action)=>{
@@ -21,10 +26,11 @@ const favoritesReducer = (state, action)=>{
 }
 
 function Characters() {
-  const [characters, setCharacters] = useState([]);
+  //const [characters, setCharacters] = useState([]);
   const [favorites, dispatch] = useReducer(favoritesReducer, initialState);
   const [search, setSearch] = useState('');
-
+  const searchInput = useRef(null)
+  const characters = useCharacters(API);
   //Agregar favoritos
   const hadleClick = favorite =>{
     dispatch({
@@ -33,19 +39,16 @@ function Characters() {
     })
   }
   //Llamado Api
-  useEffect(()=>{
-    fetch('https://rickandmortyapi.com/api/character/')
-        .then(response => response.json())
-        .then(data => setCharacters(data.results)) 
-  },[]);
+  // useEffect(()=>{
+  //   fetch('https://rickandmortyapi.com/api/character/')
+  //       .then(response => response.json())
+  //       .then(data => setCharacters(data.results)) 
+  // },[]);
 
   //Filtrar por busqueda
-  const handleSearch = event =>{
-    setSearch(event.target.value)
-  }
-  // const filtederedUsers = characters.filter((user)=>{
-  //   return user.name.toLowerCase().includes(search.toLowerCase());
-  // });
+  const handleSearch = useCallback(() => {
+    setSearch(searchInput.current.value);
+  }, [])
 
   const filtederedUsers = useMemo(()=>
     characters.filter((user)=>{
@@ -76,13 +79,13 @@ function Characters() {
       
       }
       <h2>Characters</h2>
-      <div className='Search'>
-        <input 
-          type="text" 
-          value={search} 
-          onChange={handleSearch}
-          />
-      </div>
+
+      
+      <Search
+        search = {search}
+        searchInput = {searchInput}
+        handleSearch = {handleSearch}
+      />
       <div className='characters-container container'>
       {
         filtederedUsers.map((character, id) =>{
